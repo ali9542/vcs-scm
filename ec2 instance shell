@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Set your AWS region and AMI ID
+REGION="us-east-1"
+AMI_ID="ami-12345678"  # Replace with your desired AMI ID
+INSTANCE_TYPE="t2.micro"
+KEY_NAME="your-key-pair-name"
+SECURITY_GROUP_ID="your-security-group-id"
+SUBNET_ID="your-subnet-id"
+
+# Create the EC2 instance
+INSTANCE_ID=$(aws ec2 run-instances \
+  --region $REGION \
+  --image-id $AMI_ID \
+  --instance-type $INSTANCE_TYPE \
+  --key-name $KEY_NAME \
+  --security-group-ids $SECURITY_GROUP_ID \
+  --subnet-id $SUBNET_ID \
+  --output text \
+  --query 'Instances[0].InstanceId')
+
+# Wait for the instance to be in the "running" state
+aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+
+# Get the public DNS name of the instance
+PUBLIC_DNS=$(aws ec2 describe-instances \
+  --region $REGION \
+  --instance-ids $INSTANCE_ID \
+  --output text \
+  --query 'Reservations[0].Instances[0].PublicDnsName')
+
+echo "EC2 instance created with ID: $INSTANCE_ID"
+echo "Public DNS: $PUBLIC_DNS"
